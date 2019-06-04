@@ -27,7 +27,8 @@ $GLOBALS['TL_DCA']['tl_location_archive'] = [
             'format' => '%s'
         ],
         'sorting'           => [
-            'mode'                  => 1,
+            'mode'                  => 2,
+            'fields' => ['title'],
             'panelLayout'           => 'filter;search,limit'
         ],
         'global_operations' => [

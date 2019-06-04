@@ -53,14 +53,14 @@ class LocationModel extends \Model
     {
         $arrResult = [];
 
-        if (($objLocations = static::findAll(['order' => 'name ASC'])) !== null) {
+        if (($objLocations = static::findAll(['order' => 'title ASC'])) !== null) {
             while ($objLocations->next()) {
                 if (empty($arrSkipLocations) || !in_array($objLocations->id, $arrSkipLocations)) {
                     $strCountry = ($objLocations->country && $objLocations->country != 'de' ? $GLOBALS['TL_LANG']['CNT'][$objLocations->country] : '');
 
                     $arrResult[$objLocations->id] = ($blnIncludeDescriptions && $objLocations->description ?
-                        $objLocations->name . ' (' . ($strCountry ? $strCountry . ' – ' : '') . $objLocations->description . ')' :
-                        $objLocations->name . ($strCountry ? ' (' . $strCountry . ')' : ''));
+                        $objLocations->title . ' (' . ($strCountry ? $strCountry . ' – ' : '') . $objLocations->description . ')' :
+                        $objLocations->title . ($strCountry ? ' (' . $strCountry . ')' : ''));
                 }
             }
         }

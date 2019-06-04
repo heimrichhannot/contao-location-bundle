@@ -23,11 +23,11 @@ $GLOBALS['TL_DCA']['tl_location'] = [
     ],
     'list'        => [
         'label'             => [
-            'fields' => ['id'],
+            'fields' => ['title'],
             'format' => '%s'
         ],
         'sorting'           => [
-            'mode'                  => 1,
+            'mode'                  => 2,
             'fields'                => ['title'],
             'panelLayout'           => 'filter;sort,search,limit',
             'child_record_callback' => ['huh.location.data_container.location_container', 'listChildren']

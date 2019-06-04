@@ -24,5 +24,15 @@ $lang['publish_legend'] = 'Veröffentlichung';
 /**
  * Buttons
  */
-$lang['new'][0] = 'Neuer Ort';
-$lang['new'][1] = 'Ort erstellen';
+$lang['new'][0]    = 'Neuer Ort';
+$lang['new'][1]    = 'Ort erstellen';
+$lang['edit'][0]   = 'Ort bearbeiten';
+$lang['edit'][1]   = 'Ort ID %s bearbeiten';
+$lang['copy'][0]   = 'Ort duplizieren';
+$lang['copy'][1]   = 'Ort ID %s duplizieren';
+$lang['delete'][0] = 'Ort löschen';
+$lang['delete'][1] = 'Ort ID %s löschen';
+$lang['toggle'][0] = 'Ort veröffentlichen';
+$lang['toggle'][1] = 'Ort ID %s veröffentlichen/verstecken';
+$lang['show'][0]   = 'Ort Details';
+$lang['show'][1]   = 'Ort-Details ID %s anzeigen';

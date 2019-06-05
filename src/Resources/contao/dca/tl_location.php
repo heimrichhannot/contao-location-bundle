@@ -1,7 +1,7 @@
 <?php
 
 $GLOBALS['TL_DCA']['tl_location'] = [
-    'config'   => [
+    'config'      => [
         'dataContainer'     => 'Table',
         'enableVersioning'  => true,
         'onload_callback'   => [
@@ -16,14 +16,14 @@ $GLOBALS['TL_DCA']['tl_location'] = [
         ],
         'sql'               => [
             'keys' => [
-                'id'    => 'primary',
-                'pid'   => 'index',
-                'alias' => 'index',
+                'id'                       => 'primary',
+                'pid'                      => 'index',
+                'alias'                    => 'index',
                 'pid,start,stop,published' => 'index'
             ]
         ]
     ],
-    'list'     => [
+    'list'        => [
         'sorting'           => [
             'mode'                  => 5,
             'paste_button_callback' => ['huh.location.data_container.location_container', 'pasteLocation'],
@@ -31,8 +31,8 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'child_record_callback' => ['huh.location.data_container.location_container', 'listChildren']
         ],
         'label'             => [
-            'fields'         => ['title'],
-            'format'         => '%s',
+            'fields' => ['title'],
+            'format' => '%s',
         ],
         'global_operations' => [
             'toggleNodes' => [
@@ -77,7 +77,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'icon'       => 'delete.gif',
                 'attributes' => 'onclick="if(!confirm(\'' . $GLOBALS['TL_LANG']['MSC']['deleteConfirm'] . '\'))return false;Backend.getScrollOffset()"'
             ],
-            'toggle' => [
+            'toggle'     => [
                 'label'           => &$GLOBALS['TL_LANG']['tl_location']['toggle'],
                 'icon'            => 'visible.gif',
                 'attributes'      => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleVisibility(this,%s)"',
@@ -90,29 +90,29 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             ]
         ]
     ],
-    'palettes' => [
+    'palettes'    => [
         '__selector__' => [
             'published'
         ],
-        'default'      => '{general_legend},title,description,country;{publish_legend},published;',
+        'default'      => '{general_legend},title,alias,description;{address_legend},street,street2,postal,city,state,country,coordinates;{publish_legend},published;',
     ],
     'subpalettes' => [
         'published' => 'start,stop'
     ],
-    'fields'   => [
-        'id'            => [
+    'fields'      => [
+        'id'          => [
             'sql' => "int(10) unsigned NOT NULL auto_increment"
         ],
-        'pid'           => [
+        'pid'         => [
             'sql' => "int(10) unsigned NOT NULL default '0'"
         ],
-        'sorting'       => [
+        'sorting'     => [
             'sql' => "int(10) unsigned NOT NULL default '0'"
         ],
-        'tstamp'        => [
+        'tstamp'      => [
             'sql' => "int(10) unsigned NOT NULL default '0'"
         ],
-        'dateAdded'     => [
+        'dateAdded'   => [
             'label'   => &$GLOBALS['TL_LANG']['MSC']['dateAdded'],
             'sorting' => true,
             'flag'    => 6,
@@ -129,23 +129,23 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'eval'      => ['mandatory' => true, 'tl_class' => 'w50'],
             'sql'       => "varchar(255) NOT NULL default ''"
         ],
-        'alias'         => [
+        'alias'       => [
             'label'         => &$GLOBALS['TL_LANG']['tl_location']['alias'],
             'exclude'       => true,
             'search'        => true,
             'inputType'     => 'text',
             'eval'          => [
-                'rgxp' => 'alias',
-                'unique' => true,
+                'rgxp'              => 'alias',
+                'unique'            => true,
                 'spaceToUnderscore' => true,
-                'maxlength' => 128,
-                'tl_class' => 'w50',
-                'doNotCopy' => true,
+                'maxlength'         => 128,
+                'tl_class'          => 'w50',
+                'doNotCopy'         => true,
             ],
             'save_callback' => [
                 ['huh.location.data_container.location_container', 'generateAlias']
             ],
-            'sql'           => "varbinary(128) NOT NULL default ''"
+            'sql'           => "varchar(128) COLLATE utf8_bin NOT NULL default ''"
         ],
         'description' => [
             'label'     => &$GLOBALS['TL_LANG']['tl_location']['description'],
@@ -154,6 +154,74 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'inputType' => 'textarea',
             'eval'      => ['tl_class' => 'long clr'],
             'sql'       => "text NULL"
+        ],
+        'street'      => [
+            'label'     => &$GLOBALS['TL_LANG']['tl_location']['street'],
+            'exclude'   => true,
+            'search'    => true,
+            'inputType' => 'text',
+            'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+            'sql'       => "varchar(255) NOT NULL default ''"
+        ],
+        'street2'     => [
+            'label'     => &$GLOBALS['TL_LANG']['tl_location']['street2'],
+            'exclude'   => true,
+            'search'    => true,
+            'inputType' => 'text',
+            'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+            'sql'       => "varchar(255) NOT NULL default ''"
+        ],
+        'postal'      => [
+            'label'     => &$GLOBALS['TL_LANG']['tl_location']['postal'],
+            'exclude'   => true,
+            'search'    => true,
+            'inputType' => 'text',
+            'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+            'sql'       => "varchar(255) NOT NULL default ''"
+        ],
+        'city'        => [
+            'label'     => &$GLOBALS['TL_LANG']['tl_location']['city'],
+            'exclude'   => true,
+            'search'    => true,
+            'inputType' => 'text',
+            'eval'      => ['maxlength' => 255, 'tl_class' => 'w50'],
+            'sql'       => "varchar(255) NOT NULL default ''"
+        ],
+        'state'       => [
+            'label'     => &$GLOBALS['TL_LANG']['tl_location']['state'],
+            'exclude'   => true,
+            'filter'    => true,
+            'sorting'   => true,
+            'inputType' => 'text',
+            'eval'      => ['maxlength' => 255, 'tl_class' => 'w50', 'chosen' => true],
+            'sql'       => "varchar(255) NOT NULL default ''"
+        ],
+        'coordinates' => [
+            'label'         => &$GLOBALS['TL_LANG']['tl_location']['coordinates'],
+            'exclude'       => true,
+            'inputType'     => 'text',
+            'save_callback' => [
+                function ($value, \Contao\DataContainer $dc) {
+                    if ($value) {
+                        return $value;
+                    }
+
+                    $coordinates = System::getContainer()->get('huh.utils.location')->computeCoordinatesByArray([
+                        'street'  => $dc->activeRecord->street,
+                        'postal'  => $dc->activeRecord->postal,
+                        'city'    => $dc->activeRecord->city,
+                        'country' => $dc->activeRecord->country ? $GLOBALS['TL_LANG']['COUNTRIES'][$dc->activeRecord->country] : '',
+                    ]);
+
+                    if (isset($coordinates['lat']) && isset($coordinates['lng'])) {
+                        return $coordinates['lat'] . ',' . $coordinates['lng'];
+                    }
+
+                    return $value;
+                }
+            ],
+            'eval'          => ['maxlength' => 255, 'tl_class' => 'w50'],
+            'sql'           => "varchar(255) NOT NULL default ''"
         ],
         'country'     => [
             'label'     => &$GLOBALS['TL_LANG']['tl_location']['country'],

@@ -3,8 +3,13 @@
 namespace HeimrichHannot\LocationBundle\DataContainer;
 
 use Contao\Controller;
+use Contao\CoreBundle\Exception\AccessDeniedException;
+use Contao\DataContainer;
+use Contao\Environment;
+use Contao\Image;
 use Contao\System;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 
 class LocationContainer
 {
@@ -33,106 +38,30 @@ class LocationContainer
 
     public function checkPermission()
     {
-        $user = \Contao\BackendUser::getInstance();
-        $database = \Contao\Database::getInstance();
+        $user = \BackendUser::getInstance();
 
-        if ($user->isAdmin)
-        {
-            return;
+        if (!$user->isAdmin && !$user->hasAccess('manage', 'locations')) {
+            Controller::redirect('contao/main.php?act=error');
+        }
+    }
+
+    /**
+     * @param string        $varValue
+     * @param DataContainer $dc
+     *
+     * @throws \Exception
+     *
+     * @return string
+     */
+    public static function generateAlias($varValue, DataContainer $dc)
+    {
+        if (null === ($location = System::getContainer()->get('huh.utils.model')->findModelInstanceByPk('tl_location', $dc->id))) {
+            return '';
         }
 
-        // Set the root IDs
-        if (!is_array($user->location_bundles) || empty($user->location_bundles))
-        {
-            $root = [0];
-        }
-        else
-        {
-            $root = $user->location_bundles;
-        }
+        $title = $dc->activeRecord->title ?: $location->title;
 
-        $id = strlen($this->request->getGet('id')) ? $this->request->getGet('id') : CURRENT_ID;
-
-        // Check current action
-        switch ($this->request->getGet('act'))
-        {
-            case 'paste':
-                // Allow
-                break;
-
-            case 'create':
-                if (!strlen($this->request->getGet('pid')) || !in_array($this->request->getGet('pid'), $root))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to create location items in location archive ID ' . $this->request->getGet('pid') . '.');
-                }
-                break;
-
-            case 'cut':
-            case 'copy':
-                if (!in_array($this->request->getGet('pid'), $root))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to ' . $this->request->getGet('act') . ' location item ID ' . $id . ' to location archive ID ' . $this->request->getGet('pid') . '.');
-                }
-            // NO BREAK STATEMENT HERE
-
-            case 'edit':
-            case 'show':
-            case 'delete':
-            case 'toggle':
-            case 'feature':
-                $objArchive = $database->prepare("SELECT pid FROM tl_location WHERE id=?")
-                    ->limit(1)
-                    ->execute($id);
-
-                if ($objArchive->numRows < 1)
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Invalid location item ID ' . $id . '.');
-                }
-
-                if (!in_array($objArchive->pid, $root))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to ' . $this->request->getGet('act') . ' location item ID ' . $id . ' of location archive ID ' . $objArchive->pid . '.');
-                }
-                break;
-
-            case 'select':
-            case 'editAll':
-            case 'deleteAll':
-            case 'overrideAll':
-            case 'cutAll':
-            case 'copyAll':
-                if (!in_array($id, $root))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to access location archive ID ' . $id . '.');
-                }
-
-                $objArchive = $database->prepare("SELECT id FROM tl_location WHERE pid=?")
-                    ->execute($id);
-
-                if ($objArchive->numRows < 1)
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Invalid location archive ID ' . $id . '.');
-                }
-
-                /** @var \Symfony\Component\HttpFoundation\Session\SessionInterface $session */
-                $session = \System::getContainer()->get('session');
-
-                $session = $session->all();
-                $session['CURRENT']['IDS'] = array_intersect($session['CURRENT']['IDS'], $objArchive->fetchEach('id'));
-                $session->replace($session);
-                break;
-
-            default:
-                if (strlen($this->request->getGet('act')))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Invalid command "' . $this->request->getGet('act') . '".');
-                }
-                elseif (!in_array($id, $root))
-                {
-                    throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to access location archive ID ' . $id . '.');
-                }
-                break;
-        }
+        return System::getContainer()->get('huh.utils.dca')->generateAlias($varValue, $dc->id, 'tl_location', $title);
     }
 
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
@@ -258,5 +187,138 @@ class LocationContainer
         }
 
         $objVersions->create();
+    }
+
+    /**
+     * Add a breadcrumb menu to the page tree
+     *
+     * @throws AccessDeniedException
+     * @throws \RuntimeException
+     */
+    public function addBreadcrumb()
+    {
+        $strKey = 'tl_location_node';
+
+        /** @var AttributeBagInterface $objSession */
+        $objSession = \System::getContainer()->get('session')->getBag('contao_backend');
+
+        // Set a new node
+        if (System::getContainer()->get('huh.request')->hasGet('cn')) {
+            // Check the path
+            if (\Validator::isInsecurePath(System::getContainer()->get('huh.request')->getGet('cn', true))) {
+                throw new \RuntimeException('Insecure path '.System::getContainer()->get('huh.request')->getGet('cn', true));
+            }
+
+            $objSession->set($strKey, System::getContainer()->get('huh.request')->getGet('cn', true));
+            \Controller::redirect(preg_replace('/&cn=[^&]*/', '', Environment::get('request')));
+        }
+
+        $intNode = $objSession->get($strKey);
+
+        if ($intNode < 1) {
+            return;
+        }
+
+        // Check the path (thanks to Arnaud Buchoux)
+        if (\Validator::isInsecurePath($intNode)) {
+            throw new \RuntimeException('Insecure path '.$intNode);
+        }
+
+        $arrIds   = [];
+        $arrLinks = [];
+
+        // Generate breadcrumb trail
+        if ($intNode) {
+            $intId       = $intNode;
+            $objDatabase = \Database::getInstance();
+
+            do {
+                $objLocation = $objDatabase->prepare("SELECT * FROM tl_location WHERE id=?")->limit(1)->execute($intId);
+
+                if ($objLocation->numRows < 1) {
+                    // Currently selected page does not exist
+                    if ($intId == $intNode) {
+                        $objSession->set($strKey, 0);
+
+                        return;
+                    }
+
+                    break;
+                }
+
+                $arrIds[] = $intId;
+
+                // No link for the active page
+                if ($objLocation->id == $intNode) {
+                    $arrLinks[] = \Backend::addPageIcon($objLocation->row(), '', null, '', true).' '.$objLocation->title;
+                } else {
+                    $arrLinks[] = \Backend::addPageIcon($objLocation->row(), '', null, '', true).' <a href="'.\Backend::addToUrl('cn='.$objLocation->id).'" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode']).'">'.$objLocation->title.'</a>';
+                }
+
+                // FIXME: Implement permission check
+//                if (!$objUser->isAdmin && $objUser->hasAccess($objLocation->id, 'locations'))
+//                {
+//                    break;
+//                }
+
+                $intId = $objLocation->pid;
+            } while ($intId > 0);
+        }
+
+        // FIXME: implement permission check
+//        if (!$objUser->hasAccess($arrIds, 'locations'))
+//        {
+//            $objSession->set($strKey, 0);
+//            throw new AccessDeniedException('Locations ID ' . $intNode . ' is not available.');
+//        }
+
+        // Limit tree
+        $GLOBALS['TL_DCA']['tl_location']['list']['sorting']['root'] = [$intNode];
+
+        // Add root link
+        $arrLinks[] = \Image::getHtml('pagemounts.svg').' <a href="'.\Backend::addToUrl('cn=0').'" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes']).'">'.$GLOBALS['TL_LANG']['MSC']['filterAll'].'</a>';
+        $arrLinks   = array_reverse($arrLinks);
+
+        // Insert breadcrumb menu
+        $GLOBALS['TL_DCA']['tl_location']['list']['sorting']['breadcrumb'] .= '
+
+<ul id="tl_breadcrumb">
+  <li>'.implode(' › </li><li>', $arrLinks).'</li>
+</ul>';
+    }
+
+    /**
+     * Return the paste location button.
+     *
+     * @param \DataContainer
+     * @param array
+     * @param string
+     * @param bool
+     * @param array
+     *
+     * @return string
+     */
+    public function pasteLocation(DataContainer $dc, $row, $table, $cr, $arrClipboard = null)
+    {
+        $disablePA = false;
+        $disablePI = false;
+
+        // Disable all buttons if there is a circular reference
+        if (false !== $arrClipboard && ('cut' === $arrClipboard['mode'] && (1 === $cr || $arrClipboard['id'] === $row['id']) || 'cutAll' === $arrClipboard['mode'] && (1 === $cr || in_array($row['id'], $arrClipboard['id'], true)))) {
+            $disablePA = true;
+            $disablePI = true;
+        }
+
+        $return = '';
+
+        // Return the buttons
+        $imagePasteAfter = Image::getHtml('pasteafter.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id']));
+        $imagePasteInto  = Image::getHtml('pasteinto.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id']));
+
+        if ($row['id'] > 0) {
+            $return = $disablePA ? Image::getHtml('pasteafter_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=1&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteAfter.'</a> ';
+        }
+
+        return $return.($disablePI ? Image::getHtml('pasteinto_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=2&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteInto.'</a> ');
     }
 }

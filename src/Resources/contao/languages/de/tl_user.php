@@ -1,16 +1,12 @@
 <?php
 
-$lang = &$GLOBALS['TL_LANG']['tl_user'];
-
 /**
  * Fields
  */
-$lang['location_bundles'][0] = 'Erlaubte Archive';
-$lang['location_bundles'][1] = 'Hier können Sie den Zugriff auf eines oder mehrere Archive erlauben.';
-$lang['location_bundlep'][0] = 'Archivrechte';
-$lang['location_bundlep'][1] = 'Hier können Sie die Archivrechte festlegen.';
+$GLOBALS['TL_LANG']['tl_user']['locations']         = ['Orte verwalten', 'Benutzer erlauben, Orte zu verwalten'];
+$GLOBALS['TL_LANG']['tl_user']['locations_default'] = ['Standard-Orte', 'Hier können die Standard-Orte gesetzt werden, die verwendet werden, wenn der Benutzer keine Berechtigung hat um Orte zu bearbeiten.'];
 
 /**
  * Legends
  */
-$lang['location_bundle_legend'] = 'Ort-Archivrechte';
+$GLOBALS['TL_LANG']['tl_user']['locations_legend'] = 'Berechtigungen Orte';

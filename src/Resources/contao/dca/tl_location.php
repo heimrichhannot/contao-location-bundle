@@ -1,12 +1,12 @@
 <?php
 
 $GLOBALS['TL_DCA']['tl_location'] = [
-    'config'      => [
+    'config'   => [
         'dataContainer'     => 'Table',
-        'ptable'            => 'tl_location_archive',
         'enableVersioning'  => true,
         'onload_callback'   => [
             ['huh.location.data_container.location_container', 'checkPermission'],
+            ['huh.location.data_container.location_container', 'addBreadcrumb'],
         ],
         'onsubmit_callback' => [
             ['huh.utils.dca', 'setDateAdded'],
@@ -16,42 +16,62 @@ $GLOBALS['TL_DCA']['tl_location'] = [
         ],
         'sql'               => [
             'keys' => [
-                'id'                       => 'primary',
+                'id'    => 'primary',
+                'pid'   => 'index',
+                'alias' => 'index',
                 'pid,start,stop,published' => 'index'
             ]
         ]
     ],
-    'list'        => [
-        'label'             => [
-            'fields' => ['title'],
-            'format' => '%s'
-        ],
+    'list'     => [
         'sorting'           => [
-            'mode'                  => 2,
-            'fields'                => ['title'],
-            'panelLayout'           => 'filter;sort,search,limit',
+            'mode'                  => 5,
+            'paste_button_callback' => ['huh.location.data_container.location_container', 'pasteLocation'],
+            'panelLayout'           => 'search',
             'child_record_callback' => ['huh.location.data_container.location_container', 'listChildren']
         ],
+        'label'             => [
+            'fields'         => ['title'],
+            'format'         => '%s',
+        ],
         'global_operations' => [
-            'all' => [
+            'toggleNodes' => [
+                'label' => &$GLOBALS['TL_LANG']['MSC']['toggleAll'],
+                'href'  => 'ptg=all',
+                'class' => 'header_toggle'
+            ],
+            'all'         => [
                 'label'      => &$GLOBALS['TL_LANG']['MSC']['all'],
                 'href'       => 'act=select',
                 'class'      => 'header_edit_all',
-                'attributes' => 'onclick="Backend.getScrollOffset();"'
+                'attributes' => 'onclick="Backend.getScrollOffset()" accesskey="e"'
             ],
         ],
         'operations'        => [
-            'edit'   => [
+            'edit'       => [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['edit'],
                 'href'  => 'act=edit',
                 'icon'  => 'edit.gif'
             ],
-            'copy'   => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['copy'],
-                'href'  => 'act=copy',
-                'icon'  => 'copy.gif'
+            'copy'       => [
+                'label'      => &$GLOBALS['TL_LANG']['tl_location']['copy'],
+                'href'       => 'act=paste&amp;mode=copy',
+                'icon'       => 'copy.gif',
+                'attributes' => 'onclick="Backend.getScrollOffset()"'
             ],
-            'delete' => [
+            'copyChilds' => [
+                'label'      => &$GLOBALS['TL_LANG']['tl_location']['copyChilds'],
+                'href'       => 'act=paste&amp;mode=copy&amp;childs=1',
+                'icon'       => 'copychilds.gif',
+                'attributes' => 'onclick="Backend.getScrollOffset()"'
+            ],
+            'cut'        => [
+                'label'      => &$GLOBALS['TL_LANG']['tl_location']['cut'],
+                'href'       => 'act=paste&amp;mode=cut',
+                'icon'       => 'cut.gif',
+                'attributes' => 'onclick="Backend.getScrollOffset()"'
+            ],
+            'delete'     => [
                 'label'      => &$GLOBALS['TL_LANG']['tl_location']['delete'],
                 'href'       => 'act=delete',
                 'icon'       => 'delete.gif',
@@ -63,34 +83,36 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'attributes'      => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleVisibility(this,%s)"',
                 'button_callback' => ['huh.location.data_container.location_container', 'toggleIcon']
             ],
-            'show'   => [
+            'show'       => [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['show'],
                 'href'  => 'act=show',
                 'icon'  => 'show.gif'
-            ],
+            ]
         ]
     ],
-    'palettes'    => [
-        '__selector__' => ['published'],
-        'default'      => '{general_legend},title;{publish_legend},published;'
+    'palettes' => [
+        '__selector__' => [
+            'published'
+        ],
+        'default'      => '{general_legend},title,description,country;{publish_legend},published;',
     ],
     'subpalettes' => [
         'published' => 'start,stop'
     ],
-    'fields'      => [
-        'id'          => [
+    'fields'   => [
+        'id'            => [
             'sql' => "int(10) unsigned NOT NULL auto_increment"
         ],
-        'pid'         => [
-            'foreignKey' => 'tl_location_archive.title',
-            'sql'        => "int(10) unsigned NOT NULL default '0'",
-            'relation'   => ['type' => 'belongsTo', 'load' => 'eager']
+        'pid'           => [
+            'sql' => "int(10) unsigned NOT NULL default '0'"
         ],
-        'tstamp'      => [
-            'label' => &$GLOBALS['TL_LANG']['tl_location']['tstamp'],
-            'sql'   => "int(10) unsigned NOT NULL default '0'"
+        'sorting'       => [
+            'sql' => "int(10) unsigned NOT NULL default '0'"
         ],
-        'dateAdded'   => [
+        'tstamp'        => [
+            'sql' => "int(10) unsigned NOT NULL default '0'"
+        ],
+        'dateAdded'     => [
             'label'   => &$GLOBALS['TL_LANG']['MSC']['dateAdded'],
             'sorting' => true,
             'flag'    => 6,
@@ -107,12 +129,30 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'eval'      => ['mandatory' => true, 'tl_class' => 'w50'],
             'sql'       => "varchar(255) NOT NULL default ''"
         ],
+        'alias'         => [
+            'label'         => &$GLOBALS['TL_LANG']['tl_location']['alias'],
+            'exclude'       => true,
+            'search'        => true,
+            'inputType'     => 'text',
+            'eval'          => [
+                'rgxp' => 'alias',
+                'unique' => true,
+                'spaceToUnderscore' => true,
+                'maxlength' => 128,
+                'tl_class' => 'w50',
+                'doNotCopy' => true,
+            ],
+            'save_callback' => [
+                ['huh.location.data_container.location_container', 'generateAlias']
+            ],
+            'sql'           => "varbinary(128) NOT NULL default ''"
+        ],
         'description' => [
             'label'     => &$GLOBALS['TL_LANG']['tl_location']['description'],
             'exclude'   => true,
             'search'    => true,
             'inputType' => 'textarea',
-            'eval'      => ['tl_class' => 'long clr', 'mandatory' => true],
+            'eval'      => ['tl_class' => 'long clr'],
             'sql'       => "text NULL"
         ],
         'country'     => [

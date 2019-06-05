@@ -5,6 +5,3 @@ services:
 
   huh.location.data_container.location_container:
     class: HeimrichHannot\LocationBundle\DataContainer\LocationContainer
-
-  huh.location.data_container.location_archive_container:
-    class: HeimrichHannot\LocationBundle\DataContainer\LocationArchiveContainer

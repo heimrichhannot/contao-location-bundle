@@ -10,7 +10,7 @@ $GLOBALS['TL_DCA']['tl_user']['fields']['locations'] = [
     'options'   => ['manage'],
     'reference' => &$GLOBALS['TL_LANG']['tl_user']['locationsRef'],
     'eval'      => ['multiple' => true, 'tl_class' => 'clr'],
-    'sql'       => "varchar(32) NOT NULL default ''"
+    'sql'       => "blob NULL"
 ];
 
 $GLOBALS['TL_DCA']['tl_user']['fields']['locations_default'] = [

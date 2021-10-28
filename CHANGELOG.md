@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [Unreleased] - 2021-10-28
+- Fixed: missing translations for config element type
+
 ## [2.0.0] - 2021-10-28
 - Added: Config element type
 - Added: license file

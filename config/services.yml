@@ -1,0 +1,10 @@
+services:
+  _defaults:
+    autowire: true
+    autoconfigure: true
+
+  HeimrichHannot\LocationBundle\:
+    resource: '../src/{DataContainer,ConfigElementType}/*'
+
+  HeimrichHannot\LocationBundle\DataContainer\LocationContainer:
+    public: true

@@ -2,7 +2,9 @@
 
 namespace HeimrichHannot\LocationBundle\Model;
 
-class LocationModel extends \Model
+use Contao\Model;
+
+class LocationModel extends Model
 {
     protected static $strTable = 'tl_location';
 

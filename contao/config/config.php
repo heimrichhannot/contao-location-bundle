@@ -3,6 +3,9 @@
 /**
  * Backend modules
  */
+
+use HeimrichHannot\LocationBundle\Model\LocationModel;
+
 $GLOBALS['BE_MOD']['content']['location'] = [
     'tables' => ['tl_location']
 ];
@@ -10,7 +13,7 @@ $GLOBALS['BE_MOD']['content']['location'] = [
 /**
  * Models
  */
-$GLOBALS['TL_MODELS']['tl_location']         = 'HeimrichHannot\LocationBundle\Model\LocationModel';
+$GLOBALS['TL_MODELS']['tl_location']         = LocationModel::class;
 
 /**
  * Permissions

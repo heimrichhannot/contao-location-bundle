@@ -1,12 +1,14 @@
 <?php
 
+use HeimrichHannot\LocationBundle\DataContainer\LocationContainer;
+
 $GLOBALS['TL_DCA']['tl_location'] = [
     'config'      => [
         'dataContainer'     => 'Table',
         'enableVersioning'  => true,
         'onload_callback'   => [
-            ['huh.location.data_container.location_container', 'checkPermission'],
-            ['huh.location.data_container.location_container', 'addBreadcrumb'],
+            [LocationContainer::class, 'checkPermission'],
+            [LocationContainer::class, 'addBreadcrumb'],
         ],
         'onsubmit_callback' => [
             ['huh.utils.dca', 'setDateAdded'],
@@ -26,9 +28,9 @@ $GLOBALS['TL_DCA']['tl_location'] = [
     'list'        => [
         'sorting'           => [
             'mode'                  => 5,
-            'paste_button_callback' => ['huh.location.data_container.location_container', 'pasteLocation'],
+            'paste_button_callback' => [LocationContainer::class, 'pasteLocation'],
             'panelLayout'           => 'search',
-            'child_record_callback' => ['huh.location.data_container.location_container', 'listChildren']
+            'child_record_callback' => [LocationContainer::class, 'listChildren']
         ],
         'label'             => [
             'fields' => ['title'],
@@ -81,7 +83,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'label'           => &$GLOBALS['TL_LANG']['tl_location']['toggle'],
                 'icon'            => 'visible.gif',
                 'attributes'      => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleVisibility(this,%s)"',
-                'button_callback' => ['huh.location.data_container.location_container', 'toggleIcon']
+                'button_callback' => [LocationContainer::class, 'toggleIcon']
             ],
             'show'       => [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['show'],
@@ -143,7 +145,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'doNotCopy'         => true,
             ],
             'save_callback' => [
-                ['huh.location.data_container.location_container', 'generateAlias']
+                [LocationContainer::class, 'generateAlias']
             ],
             'sql'           => "varchar(128) COLLATE utf8_bin NOT NULL default ''"
         ],

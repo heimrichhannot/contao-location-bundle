@@ -1,7 +1,0 @@
-services:
-  _defaults:
-    public: true
-    autowire: true
-
-  huh.location.data_container.location_container:
-    class: HeimrichHannot\LocationBundle\DataContainer\LocationContainer

@@ -1,6 +1,6 @@
 # Contao Location Bundle
 
-This bundle offers functionality concerning location handling for the Contao CMS.
+This bundle adds a location entity to contao. 
 
 ## Installation
 

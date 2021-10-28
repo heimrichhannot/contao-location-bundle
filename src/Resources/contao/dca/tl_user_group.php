@@ -1,6 +1,6 @@
 <?php
 
-\System::loadLanguageFile('tl_user');
+Contao\System::loadLanguageFile('tl_user');
 
 $GLOBALS['TL_DCA']['tl_user_group']['palettes']['default'] = str_replace('newsfeedp;', 'newsfeedp;{locations_legend},locations,locations_default;', $GLOBALS['TL_DCA']['tl_user_group']['palettes']['default']);
 

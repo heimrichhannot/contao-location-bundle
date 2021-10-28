@@ -15,9 +15,6 @@
       "HeimrichHannot\\LocationBundle\\": "src/"
     }
   },
-  "config": {
-    "preferred-install": "dist"
-  },
   "extra": {
     "contao-manager-plugin": "HeimrichHannot\\LocationBundle\\ContaoManager\\Plugin"
   }

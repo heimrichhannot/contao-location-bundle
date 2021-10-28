@@ -6,7 +6,9 @@
   "require": {
     "php": "^7.4",
     "contao/core-bundle": "^4.9",
-    "heimrichhannot/contao-utils-bundle": "^2.196"
+    "heimrichhannot/contao-utils-bundle": "^2.196",
+    "symfony/dependency-injection": "^4.4|^5.0",
+    "symfony/http-kernel": "^4.4|^5.0"
   },
   "autoload": {
     "psr-4": {

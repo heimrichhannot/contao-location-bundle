@@ -4,7 +4,7 @@ services:
     autoconfigure: true
 
   HeimrichHannot\LocationBundle\:
-    resource: '../../{DataContainer,ConfigElementType}/*'
+    resource: '../src/{DataContainer,ConfigElementType}/*'
 
   HeimrichHannot\LocationBundle\DataContainer\LocationContainer:
     public: true

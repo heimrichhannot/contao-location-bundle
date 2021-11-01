@@ -51,6 +51,6 @@ class LocationConfigElementType implements ConfigElementTypeInterface
             $locations[] = $locationModel->row();
         }
 
-        return new ConfigElementResult(ConfigElementResult::TYPE_RAW_VALUE, $locations);
+        return new ConfigElementResult(ConfigElementResult::TYPE_FORMATTED_VALUE, $locations);
     }
 }

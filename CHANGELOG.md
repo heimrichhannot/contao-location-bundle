@@ -1,8 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2021-10-28
+## [2.0.1] - 2021-11-01
 - Fixed: missing translations for config element type
+- Fixed: return value of config element type not formatted
 
 ## [2.0.0] - 2021-10-28
 - Added: Config element type

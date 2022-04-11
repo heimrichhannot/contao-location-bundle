@@ -8,15 +8,21 @@
 
 namespace HeimrichHannot\LocationBundle\DataContainer;
 
+use Contao\Backend;
 use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Exception\AccessDeniedException;
+use Contao\Database;
 use Contao\DataContainer;
 use Contao\Date;
 use Contao\Environment;
 use Contao\Image;
 use Contao\Input;
+use Contao\RequestToken;
+use Contao\StringUtil;
 use Contao\System;
+use Contao\Validator;
+use Contao\Versions;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\Security\Core\Security;
@@ -84,12 +90,12 @@ class LocationContainer
             $icon = 'invisible.svg';
         }
 
-        return '<a href="'.Controller::addToUrl($href).'&rt='.\RequestToken::get().'" title="'.\StringUtil::specialchars($title).'"'.$attributes.'>'.\Image::getHtml($icon, $label, 'data-state="'.($row['published'] ? 1 : 0).'"').'</a> ';
+        return '<a href="'.Controller::addToUrl($href).'&rt='.RequestToken::get().'" title="'.StringUtil::specialchars($title).'"'.$attributes.'>'.Image::getHtml($icon, $label, 'data-state="'.($row['published'] ? 1 : 0).'"').'</a> ';
     }
 
-    public function toggleVisibility($intId, $blnVisible, \DataContainer $dc = null)
+    public function toggleVisibility($intId, $blnVisible, DataContainer $dc = null)
     {
-        $database = \Contao\Database::getInstance();
+        $database = Database::getInstance();
 
         // Set the ID and action
         Input::setGet('id', $intId);
@@ -112,7 +118,7 @@ class LocationContainer
 
         // Check the field access
         if (!$this->security->getUser()->hasAccess('tl_location::published', 'alexf')) {
-            throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to publish/unpublish location item ID '.$intId.'.');
+            throw new AccessDeniedException('Not enough permissions to publish/unpublish location item ID '.$intId.'.');
         }
 
         // Set the current record
@@ -126,7 +132,7 @@ class LocationContainer
             }
         }
 
-        $objVersions = new \Versions('tl_location', $intId);
+        $objVersions = new Versions('tl_location', $intId);
         $objVersions->initialize();
 
         // Trigger the save_callback
@@ -176,17 +182,17 @@ class LocationContainer
         $strKey = 'tl_location_node';
 
         /** @var AttributeBagInterface $objSession */
-        $objSession = \System::getContainer()->get('session')->getBag('contao_backend');
+        $objSession = System::getContainer()->get('session')->getBag('contao_backend');
 
         // Set a new node
         if (System::getContainer()->get('huh.request')->hasGet('cn')) {
             // Check the path
-            if (\Validator::isInsecurePath(System::getContainer()->get('huh.request')->getGet('cn', true))) {
+            if (Validator::isInsecurePath(System::getContainer()->get('huh.request')->getGet('cn', true))) {
                 throw new \RuntimeException('Insecure path '.System::getContainer()->get('huh.request')->getGet('cn', true));
             }
 
             $objSession->set($strKey, System::getContainer()->get('huh.request')->getGet('cn', true));
-            \Controller::redirect(preg_replace('/&cn=[^&]*/', '', Environment::get('request')));
+            Controller::redirect(preg_replace('/&cn=[^&]*/', '', Environment::get('request')));
         }
 
         $intNode = $objSession->get($strKey);
@@ -196,7 +202,7 @@ class LocationContainer
         }
 
         // Check the path (thanks to Arnaud Buchoux)
-        if (\Validator::isInsecurePath($intNode)) {
+        if (Validator::isInsecurePath($intNode)) {
             throw new \RuntimeException('Insecure path '.$intNode);
         }
 
@@ -206,7 +212,7 @@ class LocationContainer
         // Generate breadcrumb trail
         if ($intNode) {
             $intId = $intNode;
-            $objDatabase = \Database::getInstance();
+            $objDatabase = Database::getInstance();
 
             do {
                 $objLocation = $objDatabase->prepare('SELECT * FROM tl_location WHERE id=?')->limit(1)->execute($intId);
@@ -226,9 +232,9 @@ class LocationContainer
 
                 // No link for the active page
                 if ($objLocation->id == $intNode) {
-                    $arrLinks[] = \Backend::addPageIcon($objLocation->row(), '', null, '', true).' '.$objLocation->title;
+                    $arrLinks[] = Backend::addPageIcon($objLocation->row(), '', null, '', true).' '.$objLocation->title;
                 } else {
-                    $arrLinks[] = \Backend::addPageIcon($objLocation->row(), '', null, '', true).' <a href="'.\Backend::addToUrl('cn='.$objLocation->id).'" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode']).'">'.$objLocation->title.'</a>';
+                    $arrLinks[] = Backend::addPageIcon($objLocation->row(), '', null, '', true).' <a href="'.Backend::addToUrl('cn='.$objLocation->id).'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode']).'">'.$objLocation->title.'</a>';
                 }
 
                 // FIXME: Implement permission check
@@ -252,7 +258,7 @@ class LocationContainer
         $GLOBALS['TL_DCA']['tl_location']['list']['sorting']['root'] = [$intNode];
 
         // Add root link
-        $arrLinks[] = \Image::getHtml('pagemounts.svg').' <a href="'.\Backend::addToUrl('cn=0').'" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes']).'">'.$GLOBALS['TL_LANG']['MSC']['filterAll'].'</a>';
+        $arrLinks[] = Image::getHtml('pagemounts.svg').' <a href="'.Backend::addToUrl('cn=0').'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes']).'">'.$GLOBALS['TL_LANG']['MSC']['filterAll'].'</a>';
         $arrLinks = array_reverse($arrLinks);
 
         // Insert breadcrumb menu

@@ -1,7 +1,7 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
-## [Unreleased] - 2022-04-11
+## [2.1.0] - 2022-04-11
 - Changed: allow php 8
 - Fixed: user and user group palettes
 - Fixed: php cs fixer config

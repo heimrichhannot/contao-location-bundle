@@ -2,14 +2,18 @@
 
 namespace HeimrichHannot\LocationBundle\DataContainer;
 
+use Contao\BackendUser;
+use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Exception\AccessDeniedException;
 use Contao\DataContainer;
+use Contao\Date;
 use Contao\Environment;
 use Contao\Image;
 use Contao\System;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
+use Symfony\Component\Security\Core\Security;
 
 class LocationContainer
 {
@@ -21,27 +25,27 @@ class LocationContainer
     /**
      * @var \HeimrichHannot\RequestBundle\Component\HttpFoundation\Request
      */
-    protected $request;
+    protected        $request;
+    private Security $security;
 
-    public function __construct(ContainerInterface $container)
+    public function __construct(ContainerInterface $container, Security $security)
     {
         $this->container = $container;
-
         $this->request = $this->container->get('huh.request');
+
+        $this->security = $security;
     }
 
     public function listChildren($arrRow)
     {
         return '<div class="tl_content_left">' . ($arrRow['title'] ?: $arrRow['id']) . ' <span style="color:#b3b3b3; padding-left:3px">[' .
-            \Date::parse(\Contao\Config::get('datimFormat'), trim($arrRow['dateAdded'])) . ']</span></div>';
+            Date::parse(Config::get('datimFormat'), trim($arrRow['dateAdded'])) . ']</span></div>';
     }
 
     public function checkPermission()
     {
-        $user = \BackendUser::getInstance();
-
-        if (!$user->isAdmin && !$user->hasAccess('manage', 'locations')) {
-            Controller::redirect('contao/main.php?act=error');
+        if (!$this->security->getUser()->isAdmin && !$this->security->getUser()->hasAccess('manage', 'locations')) {
+            Controller::redirect('contao?act=error');
         }
     }
 

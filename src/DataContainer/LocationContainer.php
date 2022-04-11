@@ -1,8 +1,13 @@
 <?php
 
+/*
+ * Copyright (c) 2022 Heimrich & Hannot GmbH
+ *
+ * @license LGPL-3.0-or-later
+ */
+
 namespace HeimrichHannot\LocationBundle\DataContainer;
 
-use Contao\BackendUser;
 use Contao\Config;
 use Contao\Controller;
 use Contao\CoreBundle\Exception\AccessDeniedException;
@@ -10,6 +15,7 @@ use Contao\DataContainer;
 use Contao\Date;
 use Contao\Environment;
 use Contao\Image;
+use Contao\Input;
 use Contao\System;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
@@ -25,7 +31,7 @@ class LocationContainer
     /**
      * @var \HeimrichHannot\RequestBundle\Component\HttpFoundation\Request
      */
-    protected        $request;
+    protected $request;
     private Security $security;
 
     public function __construct(ContainerInterface $container, Security $security)
@@ -38,20 +44,12 @@ class LocationContainer
 
     public function listChildren($arrRow)
     {
-        return '<div class="tl_content_left">' . ($arrRow['title'] ?: $arrRow['id']) . ' <span style="color:#b3b3b3; padding-left:3px">[' .
-            Date::parse(Config::get('datimFormat'), trim($arrRow['dateAdded'])) . ']</span></div>';
-    }
-
-    public function checkPermission()
-    {
-        if (!$this->security->getUser()->isAdmin && !$this->security->getUser()->hasAccess('manage', 'locations')) {
-            Controller::redirect('contao?act=error');
-        }
+        return '<div class="tl_content_left">'.($arrRow['title'] ?: $arrRow['id']).' <span style="color:#b3b3b3; padding-left:3px">['.
+            Date::parse(Config::get('datimFormat'), trim($arrRow['dateAdded'])).']</span></div>';
     }
 
     /**
-     * @param string        $varValue
-     * @param DataContainer $dc
+     * @param string $varValue
      *
      * @throws \Exception
      *
@@ -70,75 +68,60 @@ class LocationContainer
 
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
     {
-        $user = \Contao\BackendUser::getInstance();
-
-        if (strlen($this->request->getGet('tid')))
-        {
-            $this->toggleVisibility($this->request->getGet('tid'), ($this->request->getGet('state') === '1'), (@func_get_arg(12) ?: null));
+        if (\strlen($this->request->getGet('tid'))) {
+            $this->toggleVisibility($this->request->getGet('tid'), ('1' === $this->request->getGet('state')), (@func_get_arg(12) ?: null));
             Controller::redirect(System::getReferer());
         }
 
         // Check permissions AFTER checking the tid, so hacking attempts are logged
-        if (!$user->hasAccess('tl_location::published', 'alexf'))
-        {
+        if (!$this->security->getUser()->hasAccess('tl_location::published', 'alexf')) {
             return '';
         }
 
         $href .= '&amp;tid='.$row['id'].'&amp;state='.($row['published'] ? '' : 1);
 
-        if (!$row['published'])
-        {
+        if (!$row['published']) {
             $icon = 'invisible.svg';
         }
 
-        return '<a href="'.Controller::addToUrl($href).'&rt='.\RequestToken::get().'" title="'.\StringUtil::specialchars($title).'"'.$attributes.'>'.\Image::getHtml($icon, $label, 'data-state="' . ($row['published'] ? 1 : 0) . '"').'</a> ';
+        return '<a href="'.Controller::addToUrl($href).'&rt='.\RequestToken::get().'" title="'.\StringUtil::specialchars($title).'"'.$attributes.'>'.\Image::getHtml($icon, $label, 'data-state="'.($row['published'] ? 1 : 0).'"').'</a> ';
     }
 
-    public function toggleVisibility($intId, $blnVisible, \DataContainer $dc=null)
+    public function toggleVisibility($intId, $blnVisible, \DataContainer $dc = null)
     {
-        $user = \Contao\BackendUser::getInstance();
         $database = \Contao\Database::getInstance();
 
         // Set the ID and action
-        \Contao\Input::setGet('id', $intId);
-        \Contao\Input::setGet('act', 'toggle');
+        Input::setGet('id', $intId);
+        Input::setGet('act', 'toggle');
 
-        if ($dc)
-        {
+        if ($dc) {
             $dc->id = $intId; // see #8043
         }
 
         // Trigger the onload_callback
-        if (is_array($GLOBALS['TL_DCA']['tl_location']['config']['onload_callback']))
-        {
-            foreach ($GLOBALS['TL_DCA']['tl_location']['config']['onload_callback'] as $callback)
-            {
-                if (is_array($callback))
-                {
+        if (\is_array($GLOBALS['TL_DCA']['tl_location']['config']['onload_callback'])) {
+            foreach ($GLOBALS['TL_DCA']['tl_location']['config']['onload_callback'] as $callback) {
+                if (\is_array($callback)) {
                     System::importStatic($callback[0])->{$callback[1]}($dc);
-                }
-                elseif (is_callable($callback))
-                {
+                } elseif (\is_callable($callback)) {
                     $callback($dc);
                 }
             }
         }
 
         // Check the field access
-        if (!$user->hasAccess('tl_location::published', 'alexf'))
-        {
-            throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to publish/unpublish location item ID ' . $intId . '.');
+        if (!$this->security->getUser()->hasAccess('tl_location::published', 'alexf')) {
+            throw new \Contao\CoreBundle\Exception\AccessDeniedException('Not enough permissions to publish/unpublish location item ID '.$intId.'.');
         }
 
         // Set the current record
-        if ($dc)
-        {
-            $objRow = $database->prepare("SELECT * FROM tl_location WHERE id=?")
+        if ($dc) {
+            $objRow = $database->prepare('SELECT * FROM tl_location WHERE id=?')
                 ->limit(1)
                 ->execute($intId);
 
-            if ($objRow->numRows)
-            {
+            if ($objRow->numRows) {
                 $dc->activeRecord = $objRow;
             }
         }
@@ -147,16 +130,11 @@ class LocationContainer
         $objVersions->initialize();
 
         // Trigger the save_callback
-        if (is_array($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback']))
-        {
-            foreach ($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'] as $callback)
-            {
-                if (is_array($callback))
-                {
+        if (\is_array($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'])) {
+            foreach ($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'] as $callback) {
+                if (\is_array($callback)) {
                     $blnVisible = System::importStatic($callback[0])->{$callback[1]}($blnVisible, $dc);
-                }
-                elseif (is_callable($callback))
-                {
+                } elseif (\is_callable($callback)) {
                     $blnVisible = $callback($blnVisible, $dc);
                 }
             }
@@ -165,26 +143,20 @@ class LocationContainer
         $time = time();
 
         // Update the database
-        $database->prepare("UPDATE tl_location SET tstamp=$time, published='" . ($blnVisible ? '1' : "''") . "' WHERE id=?")
+        $database->prepare("UPDATE tl_location SET tstamp=$time, published='".($blnVisible ? '1' : "''")."' WHERE id=?")
             ->execute($intId);
 
-        if ($dc)
-        {
+        if ($dc) {
             $dc->activeRecord->tstamp = $time;
             $dc->activeRecord->published = ($blnVisible ? '1' : '');
         }
 
         // Trigger the onsubmit_callback
-        if (is_array($GLOBALS['TL_DCA']['tl_location']['config']['onsubmit_callback']))
-        {
-            foreach ($GLOBALS['TL_DCA']['tl_location']['config']['onsubmit_callback'] as $callback)
-            {
-                if (is_array($callback))
-                {
+        if (\is_array($GLOBALS['TL_DCA']['tl_location']['config']['onsubmit_callback'])) {
+            foreach ($GLOBALS['TL_DCA']['tl_location']['config']['onsubmit_callback'] as $callback) {
+                if (\is_array($callback)) {
                     System::importStatic($callback[0])->{$callback[1]}($dc);
-                }
-                elseif (is_callable($callback))
-                {
+                } elseif (\is_callable($callback)) {
                     $callback($dc);
                 }
             }
@@ -194,7 +166,7 @@ class LocationContainer
     }
 
     /**
-     * Add a breadcrumb menu to the page tree
+     * Add a breadcrumb menu to the page tree.
      *
      * @throws AccessDeniedException
      * @throws \RuntimeException
@@ -228,16 +200,16 @@ class LocationContainer
             throw new \RuntimeException('Insecure path '.$intNode);
         }
 
-        $arrIds   = [];
+        $arrIds = [];
         $arrLinks = [];
 
         // Generate breadcrumb trail
         if ($intNode) {
-            $intId       = $intNode;
+            $intId = $intNode;
             $objDatabase = \Database::getInstance();
 
             do {
-                $objLocation = $objDatabase->prepare("SELECT * FROM tl_location WHERE id=?")->limit(1)->execute($intId);
+                $objLocation = $objDatabase->prepare('SELECT * FROM tl_location WHERE id=?')->limit(1)->execute($intId);
 
                 if ($objLocation->numRows < 1) {
                     // Currently selected page does not exist
@@ -281,7 +253,7 @@ class LocationContainer
 
         // Add root link
         $arrLinks[] = \Image::getHtml('pagemounts.svg').' <a href="'.\Backend::addToUrl('cn=0').'" title="'.\StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes']).'">'.$GLOBALS['TL_LANG']['MSC']['filterAll'].'</a>';
-        $arrLinks   = array_reverse($arrLinks);
+        $arrLinks = array_reverse($arrLinks);
 
         // Insert breadcrumb menu
         $GLOBALS['TL_DCA']['tl_location']['list']['sorting']['breadcrumb'] .= '
@@ -308,7 +280,7 @@ class LocationContainer
         $disablePI = false;
 
         // Disable all buttons if there is a circular reference
-        if (false !== $arrClipboard && ('cut' === $arrClipboard['mode'] && (1 === $cr || $arrClipboard['id'] === $row['id']) || 'cutAll' === $arrClipboard['mode'] && (1 === $cr || in_array($row['id'], $arrClipboard['id'], true)))) {
+        if (false !== $arrClipboard && ('cut' === $arrClipboard['mode'] && (1 === $cr || $arrClipboard['id'] === $row['id']) || 'cutAll' === $arrClipboard['mode'] && (1 === $cr || \in_array($row['id'], $arrClipboard['id'], true)))) {
             $disablePA = true;
             $disablePI = true;
         }
@@ -317,12 +289,12 @@ class LocationContainer
 
         // Return the buttons
         $imagePasteAfter = Image::getHtml('pasteafter.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id']));
-        $imagePasteInto  = Image::getHtml('pasteinto.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id']));
+        $imagePasteInto = Image::getHtml('pasteinto.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id']));
 
         if ($row['id'] > 0) {
-            $return = $disablePA ? Image::getHtml('pasteafter_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=1&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteAfter.'</a> ';
+            $return = $disablePA ? Image::getHtml('pasteafter_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=1&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteAfter.'</a> ';
         }
 
-        return $return.($disablePI ? Image::getHtml('pasteinto_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=2&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteInto.'</a> ');
+        return $return.($disablePI ? Image::getHtml('pasteinto_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=2&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteInto.'</a> ');
     }
 }

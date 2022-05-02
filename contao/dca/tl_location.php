@@ -159,7 +159,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'exclude' => true,
             'search' => true,
             'inputType' => 'textarea',
-            'eval' => ['tl_class' => 'long clr'],
+            'eval' => ['rte' => 'tinyMCE', 'tl_class' => 'long clr'],
             'sql' => 'text NULL',
         ],
         'street' => [

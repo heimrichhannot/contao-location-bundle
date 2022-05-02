@@ -1,6 +1,9 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.1.1] - 2022-05-02
+- Fixed: tl_location dataContainer config
+
 ## [2.1.0] - 2022-04-11
 - Changed: allow php 8
 - Fixed: user and user group palettes

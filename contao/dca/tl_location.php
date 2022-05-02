@@ -10,7 +10,7 @@ use HeimrichHannot\LocationBundle\DataContainer\LocationContainer;
 
 $GLOBALS['TL_DCA']['tl_location'] = [
     'config' => [
-        'dataContainer' => 'Table',
+        'dataContainer' => \Contao\DC_Table::class,
         'enableVersioning' => true,
         'onload_callback' => [
             [LocationContainer::class, 'addBreadcrumb'],

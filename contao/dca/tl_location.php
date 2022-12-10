@@ -82,7 +82,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['delete'],
                 'href' => 'act=delete',
                 'icon' => 'delete.gif',
-                'attributes' => 'onclick="if(!confirm(\''.$GLOBALS['TL_LANG']['MSC']['deleteConfirm'].'\'))return false;Backend.getScrollOffset()"',
+                'attributes' => 'onclick="if(!confirm(\''.($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '').'\'))return false;Backend.getScrollOffset()"',
             ],
             'toggle' => [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['toggle'],
@@ -217,7 +217,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                         'street' => $dc->activeRecord->street,
                         'postal' => $dc->activeRecord->postal,
                         'city' => $dc->activeRecord->city,
-                        'country' => $dc->activeRecord->country ? $GLOBALS['TL_LANG']['COUNTRIES'][$dc->activeRecord->country] : '',
+                        'country' => $dc->activeRecord->country ? System::getCountries()[$dc->activeRecord->country] : '',
                     ]);
 
                     if (isset($coordinates['lat']) && isset($coordinates['lng'])) {

@@ -51,7 +51,7 @@ class LocationContainer
     public function listChildren($arrRow)
     {
         return '<div class="tl_content_left">'.($arrRow['title'] ?: $arrRow['id']).' <span style="color:#b3b3b3; padding-left:3px">['.
-            Date::parse(Config::get('datimFormat'), trim($arrRow['dateAdded'])).']</span></div>';
+            Date::parse(Config::get('datimFormat'), trim((string) $arrRow['dateAdded'])).']</span></div>';
     }
 
     /**
@@ -74,7 +74,7 @@ class LocationContainer
 
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
     {
-        if (\strlen($this->request->getGet('tid'))) {
+        if (\strlen((string) $this->request->getGet('tid'))) {
             $this->toggleVisibility($this->request->getGet('tid'), ('1' === $this->request->getGet('state')), (@func_get_arg(12) ?: null));
             Controller::redirect(System::getReferer());
         }
@@ -136,7 +136,7 @@ class LocationContainer
         $objVersions->initialize();
 
         // Trigger the save_callback
-        if (\is_array($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'])) {
+        if (\is_array($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'] ?? null)) {
             foreach ($GLOBALS['TL_DCA']['tl_location']['fields']['published']['save_callback'] as $callback) {
                 if (\is_array($callback)) {
                     $blnVisible = System::importStatic($callback[0])->{$callback[1]}($blnVisible, $dc);
@@ -192,7 +192,7 @@ class LocationContainer
             }
 
             $objSession->set($strKey, System::getContainer()->get('huh.request')->getGet('cn', true));
-            Controller::redirect(preg_replace('/&cn=[^&]*/', '', Environment::get('request')));
+            Controller::redirect(preg_replace('/&cn=[^&]*/', '', (string) Environment::get('request')));
         }
 
         $intNode = $objSession->get($strKey);
@@ -234,7 +234,7 @@ class LocationContainer
                 if ($objLocation->id == $intNode) {
                     $arrLinks[] = Backend::addPageIcon($objLocation->row(), '', null, '', true).' '.$objLocation->title;
                 } else {
-                    $arrLinks[] = Backend::addPageIcon($objLocation->row(), '', null, '', true).' <a href="'.Backend::addToUrl('cn='.$objLocation->id).'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode']).'">'.$objLocation->title.'</a>';
+                    $arrLinks[] = Backend::addPageIcon($objLocation->row(), '', null, '', true).' <a href="'.Backend::addToUrl('cn='.$objLocation->id).'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectNode'] ?? '').'">'.$objLocation->title.'</a>';
                 }
 
                 // FIXME: Implement permission check
@@ -258,7 +258,7 @@ class LocationContainer
         $GLOBALS['TL_DCA']['tl_location']['list']['sorting']['root'] = [$intNode];
 
         // Add root link
-        $arrLinks[] = Image::getHtml('pagemounts.svg').' <a href="'.Backend::addToUrl('cn=0').'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes']).'">'.$GLOBALS['TL_LANG']['MSC']['filterAll'].'</a>';
+        $arrLinks[] = Image::getHtml('pagemounts.svg').' <a href="'.Backend::addToUrl('cn=0').'" title="'.StringUtil::specialchars($GLOBALS['TL_LANG']['MSC']['selectAllNodes'] ?? '').'">'.($GLOBALS['TL_LANG']['MSC']['filterAll'] ?? '').'</a>';
         $arrLinks = array_reverse($arrLinks);
 
         // Insert breadcrumb menu
@@ -294,13 +294,13 @@ class LocationContainer
         $return = '';
 
         // Return the buttons
-        $imagePasteAfter = Image::getHtml('pasteafter.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id']));
-        $imagePasteInto = Image::getHtml('pasteinto.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id']));
+        $imagePasteAfter = Image::getHtml('pasteafter.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1] ?? '', $row['id']));
+        $imagePasteInto = Image::getHtml('pasteinto.svg', sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1] ?? '', $row['id']));
 
         if ($row['id'] > 0) {
-            $return = $disablePA ? Image::getHtml('pasteafter_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=1&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteAfter.'</a> ';
+            $return = $disablePA ? Image::getHtml('pasteafter_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=1&rt='.RequestToken::get().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteafter'][1] ?? '', $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteAfter.'</a> ';
         }
 
-        return $return.($disablePI ? Image::getHtml('pasteinto_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=2&rt='.System::getContainer()->get('security.csrf.token_manager')->getToken(System::getContainer()->getParameter('contao.csrf_token_name'))->getValue().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1], $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteInto.'</a> ');
+        return $return.($disablePI ? Image::getHtml('pasteinto_.svg').' ' : '<a href="'.Controller::addToUrl('act='.$arrClipboard['mode'].'&mode=2&rt='.RequestToken::get().'&pid='.$row['id'].(!\is_array($arrClipboard['id']) ? '&id='.$arrClipboard['id'] : '')).'" title="'.specialchars(sprintf($GLOBALS['TL_LANG'][$table]['pasteinto'][1] ?? '', $row['id'])).'" onclick="Backend.getScrollOffset()">'.$imagePasteInto.'</a> ');
     }
 }

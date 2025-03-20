@@ -1,6 +1,8 @@
 # Changelog
 All notable changes to this project will be documented in this file.
 
+## [2.2.2] - 2025-03-20
+- Changed: replaced deprecated huh.request serivce with RequestStack
 ## [2.2.1] - 2022-12-10
 - Added: fixes for php8 and contao 4.13
 

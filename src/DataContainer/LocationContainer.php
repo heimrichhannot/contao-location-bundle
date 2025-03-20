@@ -46,7 +46,6 @@ class LocationContainer
     public function __construct(ContainerInterface $container, Security $security,Requeststack $requestStack)
     {
         $this->container = $container;
-        $this->request = $requestStack->getCurrentRequest();
         $this->security = $security;
         $this->requestStack = $requestStack;
     }
@@ -83,11 +82,7 @@ class LocationContainer
 
         if (!empty($tid)) {
             $this->toggleVisibility($tid, ($state === '1'), func_num_args() > 12 ? func_get_arg(12) : null);
-            $referer = System::getReferer();
-            if (!str_starts_with($referer, Environment::get('base'))) {
-                $referer = '/dashboard';
-            }
-            Controller::redirect($referer);
+            Controller::redirect(System::getReferer());
         }
 
         // Check permissions AFTER checking the tid, so hacking attempts are logged

@@ -26,6 +26,7 @@ use Contao\Versions;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Symfony\Component\HttpFoundation\Session\Attribute\AttributeBagInterface;
 use Symfony\Component\Security\Core\Security;
+use Symfony\Component\HttpFoundation\RequestStack;
 
 class LocationContainer
 {
@@ -38,14 +39,15 @@ class LocationContainer
      * @var \HeimrichHannot\RequestBundle\Component\HttpFoundation\Request
      */
     protected $request;
-    private Security $security;
 
-    public function __construct(ContainerInterface $container, Security $security)
+    private Security $security;
+    private Requeststack $requestStack;
+
+    public function __construct(ContainerInterface $container, Security $security,Requeststack $requestStack)
     {
         $this->container = $container;
-        $this->request = $this->container->get('huh.request');
-
         $this->security = $security;
+        $this->requestStack = $requestStack;
     }
 
     public function listChildren($arrRow)
@@ -74,8 +76,12 @@ class LocationContainer
 
     public function toggleIcon($row, $href, $label, $title, $icon, $attributes)
     {
-        if (\strlen((string) $this->request->getGet('tid'))) {
-            $this->toggleVisibility($this->request->getGet('tid'), ('1' === $this->request->getGet('state')), (@func_get_arg(12) ?: null));
+        $request = $this->requestStack->getCurrentRequest();
+        $tid = $request->query->get('tid');
+        $state = $request->query->get('state');
+
+        if (!empty($tid)) {
+            $this->toggleVisibility($tid, ($state === '1'), func_num_args() > 12 ? func_get_arg(12) : null);
             Controller::redirect(System::getReferer());
         }
 
@@ -184,16 +190,19 @@ class LocationContainer
         /** @var AttributeBagInterface $objSession */
         $objSession = System::getContainer()->get('session')->getBag('contao_backend');
 
-        // Set a new node
-        if (System::getContainer()->get('huh.request')->hasGet('cn')) {
-            // Check the path
-            if (Validator::isInsecurePath(System::getContainer()->get('huh.request')->getGet('cn', true))) {
-                throw new \RuntimeException('Insecure path '.System::getContainer()->get('huh.request')->getGet('cn', true));
+        $request = $this->requestStack->getCurrentRequest();
+
+        if ($request && $request->query->has('cn')) {
+            $cnValue = $request->query->get('cn', true);
+
+            if (Validator::isInsecurePath($cnValue)) {
+                throw new \RuntimeException('Insecure path ' . $cnValue);
             }
 
-            $objSession->set($strKey, System::getContainer()->get('huh.request')->getGet('cn', true));
+            $objSession->set($strKey, $cnValue);
             Controller::redirect(preg_replace('/&cn=[^&]*/', '', (string) Environment::get('request')));
         }
+
 
         $intNode = $objSession->get($strKey);
 

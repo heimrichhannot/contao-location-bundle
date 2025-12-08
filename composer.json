@@ -5,10 +5,10 @@
   "license": "LGPL-3.0-or-later",
   "require": {
     "php": "^7.4 || ^8.0",
-    "contao/core-bundle": "^4.9",
-    "heimrichhannot/contao-utils-bundle": "^2.196",
-    "symfony/dependency-injection": "^4.4 || ^5.0",
-    "symfony/http-kernel": "^4.4 || ^5.0"
+    "contao/core-bundle": "^5.3",
+    "heimrichhannot/contao-utils-bundle": "^3.0",
+    "symfony/dependency-injection": "^6.4",
+    "symfony/http-kernel": "^6.4"
   },
   "autoload": {
     "psr-4": {
@@ -17,5 +17,9 @@
   },
   "extra": {
     "contao-manager-plugin": "HeimrichHannot\\LocationBundle\\ContaoManager\\Plugin"
+  },
+  "require-dev": {
+    "rector/rector": "^2.2",
+    "contao/contao-rector": "dev-main"
   }
 }

@@ -7,6 +7,8 @@
  */
 
 use HeimrichHannot\LocationBundle\DataContainer\LocationContainer;
+use Contao\System;
+use Symfony\Component\Intl\Countries;
 
 $GLOBALS['TL_DCA']['tl_location'] = [
     'config' => [
@@ -14,12 +16,6 @@ $GLOBALS['TL_DCA']['tl_location'] = [
         'enableVersioning' => true,
         'onload_callback' => [
             [LocationContainer::class, 'addBreadcrumb'],
-        ],
-        'onsubmit_callback' => [
-            ['huh.utils.dca', 'setDateAdded'],
-        ],
-        'oncopy_callback' => [
-            ['huh.utils.dca', 'setDateAddedOnCopy'],
         ],
         'sql' => [
             'keys' => [
@@ -55,46 +51,18 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             ],
         ],
         'operations' => [
-            'edit' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['edit'],
-                'href' => 'act=edit',
-                'icon' => 'edit.gif',
-            ],
-            'copy' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['copy'],
-                'href' => 'act=paste&amp;mode=copy',
-                'icon' => 'copy.gif',
-                'attributes' => 'onclick="Backend.getScrollOffset()"',
-            ],
+            'edit',
+            'copy',
             'copyChilds' => [
                 'label' => &$GLOBALS['TL_LANG']['tl_location']['copyChilds'],
                 'href' => 'act=paste&amp;mode=copy&amp;childs=1',
                 'icon' => 'copychilds.gif',
                 'attributes' => 'onclick="Backend.getScrollOffset()"',
             ],
-            'cut' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['cut'],
-                'href' => 'act=paste&amp;mode=cut',
-                'icon' => 'cut.gif',
-                'attributes' => 'onclick="Backend.getScrollOffset()"',
-            ],
-            'delete' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['delete'],
-                'href' => 'act=delete',
-                'icon' => 'delete.gif',
-                'attributes' => 'onclick="if(!confirm(\''.($GLOBALS['TL_LANG']['MSC']['deleteConfirm'] ?? '').'\'))return false;Backend.getScrollOffset()"',
-            ],
-            'toggle' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['toggle'],
-                'icon' => 'visible.gif',
-                'attributes' => 'onclick="Backend.getScrollOffset();return AjaxRequest.toggleVisibility(this,%s)"',
-                'button_callback' => [LocationContainer::class, 'toggleIcon'],
-            ],
-            'show' => [
-                'label' => &$GLOBALS['TL_LANG']['tl_location']['show'],
-                'href' => 'act=show',
-                'icon' => 'show.gif',
-            ],
+            'cut' ,
+            'delete',
+            'toggle',
+            'show',
         ],
     ],
     'palettes' => [
@@ -150,7 +118,7 @@ $GLOBALS['TL_DCA']['tl_location'] = [
                 'doNotCopy' => true,
             ],
             'save_callback' => [
-                [LocationContainer::class, 'generateAlias'],
+                [\Contao\StringUtil::class, 'generateAlias'],
             ],
             'sql' => "varchar(128) COLLATE utf8_bin NOT NULL default ''",
         ],
@@ -207,26 +175,6 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'label' => &$GLOBALS['TL_LANG']['tl_location']['coordinates'],
             'exclude' => true,
             'inputType' => 'text',
-            'save_callback' => [
-                function ($value, Contao\DataContainer $dc) {
-                    if ($value) {
-                        return $value;
-                    }
-
-                    $coordinates = System::getContainer()->get('huh.utils.location')->computeCoordinatesByArray([
-                        'street' => $dc->activeRecord->street,
-                        'postal' => $dc->activeRecord->postal,
-                        'city' => $dc->activeRecord->city,
-                        'country' => $dc->activeRecord->country ? System::getCountries()[$dc->activeRecord->country] : '',
-                    ]);
-
-                    if (isset($coordinates['lat']) && isset($coordinates['lng'])) {
-                        return $coordinates['lat'].','.$coordinates['lng'];
-                    }
-
-                    return $value;
-                },
-            ],
             'eval' => ['maxlength' => 255, 'tl_class' => 'w50'],
             'sql' => "varchar(255) NOT NULL default ''",
         ],
@@ -236,9 +184,9 @@ $GLOBALS['TL_DCA']['tl_location'] = [
             'filter' => true,
             'sorting' => true,
             'inputType' => 'select',
-            'options' => System::getCountries(),
+            'options' => Countries::getNames(),
             'eval' => ['includeBlankOption' => true, 'chosen' => true, 'tl_class' => 'w50'],
-            'sql' => "varchar(2) NOT NULL default 'de'",
+            'sql' => "varchar(2) NOT NULL default 'DE'",
         ],
         'published' => [
             'label' => &$GLOBALS['TL_LANG']['tl_location']['published'],

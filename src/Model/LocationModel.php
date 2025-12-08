@@ -2,6 +2,8 @@
 
 namespace HeimrichHannot\LocationBundle\Model;
 
+use Contao\System;
+use Symfony\Component\HttpFoundation\Request;
 use Contao\Model;
 
 class LocationModel extends Model
@@ -15,9 +17,9 @@ class LocationModel extends Model
         }
 
         $t          = static::$strTable;
-        $arrColumns = ["($t.id=?) AND $t.pid IN(" . implode(',', array_map('intval', $arrPids)) . ")"];
+        $arrColumns = ["($t.id=?) AND $t.pid IN(" . implode(',', array_map(intval(...), $arrPids)) . ")"];
 
-        if (!BE_USER_LOGGED_IN) {
+        if (!System::getContainer()->get('contao.security.token_checker')->isPreviewMode()) {
             $time         = time();
             $arrColumns[] = "($t.start='' OR $t.start<$time) AND ($t.stop='' OR $t.stop>$time) AND $t.published=1";
         }
@@ -33,10 +35,10 @@ class LocationModel extends Model
         }
 
         $t          = static::$strTable;
-        $arrColumns = ["$t.pid IN(" . implode(',', array_map('intval', $arrPids)) . ")"];
+        $arrColumns = ["$t.pid IN(" . implode(',', array_map(intval(...), $arrPids)) . ")"];
 
         // Never return unpublished elements in the back end, so they don't end up in the RSS feed
-        if (!BE_USER_LOGGED_IN || TL_MODE == 'BE') {
+        if (!System::getContainer()->get('contao.security.token_checker')->isPreviewMode() || System::getContainer()->get('contao.routing.scope_matcher')->isBackendRequest(System::getContainer()->get('request_stack')->getCurrentRequest() ?? Request::create(''))) {
             $time         = time();
             $arrColumns[] = "($t.start='' OR $t.start<$time) AND ($t.stop='' OR $t.stop>$time) AND $t.published=1";
         }

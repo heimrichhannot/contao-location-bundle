@@ -4,7 +4,11 @@ services:
     autoconfigure: true
 
   HeimrichHannot\LocationBundle\:
-    resource: '../src/{DataContainer,ConfigElementType}/*'
+    resource: '../src/{DataContainer}/*'
 
   HeimrichHannot\LocationBundle\DataContainer\LocationContainer:
     public: true
+
+  HeimrichHannot\LocationBundle\Migration\UpdateCountryCodesMigration:
+    tags:
+      - { name: 'contao.migration' }

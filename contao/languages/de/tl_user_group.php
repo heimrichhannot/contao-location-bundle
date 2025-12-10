@@ -3,7 +3,7 @@
 /**
  * Load tl_user language file
  */
-\System::loadLanguageFile('tl_user');
+Contao\System::loadLanguageFile('tl_user');
 
 /**
  * Legends
